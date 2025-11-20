@@ -69,6 +69,13 @@ Write-Host "Opening Word..."
 Start-Process "winword.exe" -ErrorAction SilentlyContinue
 
 # ======================
+# 4b. Abrir Administrador de dispositivos
+# ======================
+Write-Host "`nAbriendo Administrador de dispositivos..."
+Start-Process "devmgmt.msc"
+
+
+# ======================
 # 5. Disk Management
 # ======================
 Write-Host "`nOpening Disk Management..."
