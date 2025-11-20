@@ -50,11 +50,23 @@ $ospp = $officePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($ospp) {
     Write-Host "Office detectado. Verificando activación..."
     $result = cscript.exe //nologo $ospp /dstatus
-    $result | Select-String "LICENSE STATUS"
+
+    if ($result) {
+        $result | Select-String "LICENSE STATUS"
+    } else {
+        Write-Host "No se pudo leer el estado. Abriendo Word..."
+        Start-Process "winword.exe"
+    }
 } else {
     Write-Host "No se encontró OSPP.VBS. Abriendo Word..."
     Start-Process "winword.exe"
 }
+
+# ======================
+# 4b. Abrir Administrador de dispositivos
+# ======================
+Write-Host "`nAbriendo Administrador de dispositivos..."
+Start-Process "devmgmt.msc"
 
 # ======================
 # 5. Administración de discos
@@ -80,7 +92,7 @@ catch {
 }
 
 # ======================
-# 7. Detectar Windows 10 vs Windows 11 (método correcto)
+# 7. Detectar Windows 10 vs Windows 11
 # ======================
 $os = Get-CimInstance Win32_OperatingSystem
 
@@ -103,7 +115,7 @@ Start-Process "ms-settings:about"
 # ======================
 # 8. CrystalDiskInfo
 # ======================
-Write-Host "`nAbriendo CrystalDiskInfo en incógnito…"
+Write-Host "`nAbriendo CrystalDiskInfo en incógnito..."
 
 $edge = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
@@ -118,7 +130,7 @@ if (Test-Path $edge) {
 # ======================
 # 9. Páginas de testeo
 # ======================
-Write-Host "`nAbriendo páginas de testeo…"
+Write-Host "`nAbriendo páginas de testeo..."
 
 $testSites = @(
     "https://es.mictests.com/",
