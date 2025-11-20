@@ -6,7 +6,7 @@ Get-CimInstance Win32_Processor |
     Select-Object Name, NumberOfCores, NumberOfLogicalProcessors | Format-List
 
 # ======================
-# 2. RAM
+# 2. RAM usando SMBIOSMemoryType (más preciso)
 # ======================
 Write-Host "`n=== RAM ==="
 
@@ -17,24 +17,24 @@ Get-CimInstance Win32_PhysicalMemory | ForEach-Object {
         24 {"DDR3"}
         26 {"DDR4"}
         34 {"DDR5"}
-        default {"Unknown"}
+        default {"Desconocido"}
     }
 
     [PSCustomObject]@{
-        Capacity_GB = "{0:N2}" -f ($_.Capacity / 1GB)
-        DDR_Type = $type
-        Clock_MHz = $_.ConfiguredClockSpeed
+        Capacidad_GB = "{0:N2}" -f ($_.Capacity / 1GB)
+        Tipo_DDR = $type
+        Frecuencia_MHz = $_.ConfiguredClockSpeed
     }
 } | Format-Table -AutoSize
 
 # ======================
-# 3. Windows Activation
+# 3. Activación Windows
 # ======================
-Write-Host "`nOpening Windows activation window..."
+Write-Host "`nAbriendo ventana de activación de Windows..."
 Start-Process "slmgr.vbs" -ArgumentList "/xpr"
 
 # ======================
-# 4. OFFICE (Word ALWAYS opens)
+# 4. OFFICE (Word se abre SIEMPRE)
 # ======================
 Write-Host "`n=== OFFICE ==="
 
@@ -48,7 +48,7 @@ $officePaths = @(
 $ospp = $officePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 if ($ospp) {
-    Write-Host "Office found. Checking activation..."
+    Write-Host "Office detectado. Verificando activacion..."
     $result = cscript.exe //nologo $ospp /dstatus 2>$null
 
     if ($result) {
@@ -56,68 +56,69 @@ if ($ospp) {
         if ($license) {
             Write-Host $license
         } else {
-            Write-Host "No license info found."
+            Write-Host "No se encontro estado de licencia en OSPP."
         }
     } else {
-        Write-Host "Could not execute OSPP.VBS."
+        Write-Host "No se pudo ejecutar OSPP.VBS correctamente."
     }
 } else {
-    Write-Host "OSPP.VBS not found."
+    Write-Host "No se encontro OSPP.VBS."
 }
 
-Write-Host "Opening Word..."
+Write-Host "Abriendo Word..."
 Start-Process "winword.exe" -ErrorAction SilentlyContinue
-
 # ======================
-# 5. Disk Management
+# 5. Administracion de discos
 # ======================
-Write-Host "`nOpening Disk Management..."
+Write-Host "`nAbriendo administracion de discos..."
 Start-Process "diskmgmt.msc" -ErrorAction SilentlyContinue
 
 # ======================
-# 6. Drivers with errors
+# 6. Drivers faltantes
 # ======================
-Write-Host "`n=== Drivers with error ==="
+Write-Host "`n=== Drivers con error ==="
 
 try {
+    # evitar que lance excepción cuando no encuentra objetos
     $bad = Get-PnpDevice -Status Error -ErrorAction SilentlyContinue
     if ($bad) {
         $bad | Select-Object Class, FriendlyName, InstanceId | Format-Table -AutoSize
     } else {
-        Write-Host "No drivers with error."
+        Write-Host "No hay drivers con error."
     }
 }
 catch {
-    Write-Host "Get-PnpDevice not available on this Windows version."
+    Write-Host "Get-PnpDevice no disponible en esta version de Windows."
 }
 
 # ======================
-# 7. Detect Windows version
+# 7. Detectar Windows 10 vs Windows 11
 # ======================
 $os = Get-CimInstance Win32_OperatingSystem
-$build = [int]$os.BuildNumber
 
+$build = [int]$os.BuildNumber
 if ($build -ge 22000) {
     $winver = "Windows 11"
 } else {
     $winver = "Windows 10"
 }
 
-Write-Host "`n=== System ==="
-Write-Host "Detected: $winver"
+Write-Host "`n=== Sistema ==="
+Write-Host "Sistema detectado: $winver"
 Write-Host "Build: $build"
-Write-Host "Edition: $($os.Caption)"
-Write-Host "Architecture: $($os.OSArchitecture)"
+Write-Host "Edicion: $($os.Caption)"
+Write-Host "Arquitectura: $($os.OSArchitecture)"
 
-Write-Host "`nOpening System Properties..."
+Write-Host "`nAbriendo Propiedades del sistema..."
 Start-Process "ms-settings:about" -ErrorAction SilentlyContinue
 
 # ======================
 # 8. CrystalDiskInfo
 # ======================
-Write-Host "`nOpening CrystalDiskInfo..."
+Write-Host "`nAbriendo CrystalDiskInfo en modo privado..."
 
 $edge = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+
 $url = "https://crystalmark.info/en/software/crystaldiskinfo/"
 
 if (Test-Path $edge) {
@@ -127,9 +128,9 @@ if (Test-Path $edge) {
 }
 
 # ======================
-# 9. Test Pages
+# 9. Paginas de testeo
 # ======================
-Write-Host "`nOpening test pages..."
+Write-Host "`nAbriendo paginas de testeo..."
 
 $testSites = @(
     "https://es.mictests.com/",
@@ -145,4 +146,4 @@ foreach ($site in $testSites) {
     }
 }
 
-Write-Host "`n=== END ===`n"
+Write-Host "`n=== FIN DEL INFORME ===`n"
