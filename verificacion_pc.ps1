@@ -11,8 +11,11 @@ $servicesToStop = @(
     "CCleanerUpdate",
     "WinDefend",
     "WdNisSvc",
-    "wuauserv",   # Windows Update
-    "bits"        # Background Intelligent Transfer
+    "wuauserv",
+    "bits",
+    "edgeupdate",
+    "edgeupdatem",
+    "MicrosoftEdgeUpdate"
 )
 
 foreach ($svc in $servicesToStop) {
@@ -21,6 +24,45 @@ foreach ($svc in $servicesToStop) {
         Set-Service -Name $svc -StartupType Disabled -ErrorAction SilentlyContinue
     } catch {}
 }
+
+
+Write-Host "`n=== Buscando software basura ==="
+
+$basura = @(
+    "Avast",
+    "AVG",
+    "Bitdefender",
+    "ByteFence",
+    "CCleaner",
+    "IObit",
+    "Malwarebytes",
+    "360 Total",
+    "McAfee"
+)
+
+$found = @()
+
+foreach ($b in $basura) {
+    $apps = Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -like "*$b*" }
+
+    $apps2 = Get-ItemProperty "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+             Where-Object { $_.DisplayName -like "*$b*" }
+
+    $found += $apps
+    $found += $apps2
+}
+
+if ($found.Count -gt 0) {
+    Write-Host "Software indeseado detectado:"
+    $found.DisplayName
+
+    Write-Host "Abriendo Aplicaciones y características..."
+    Start-Process "ms-settings:appsfeatures" -ErrorAction SilentlyContinue
+} else {
+    Write-Host "No se detectó software basura."
+}
+
 
 
 # ======================
