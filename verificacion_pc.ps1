@@ -1,3 +1,28 @@
+Write-Host "=== MODO TALLER: Deteniendo servicios que ralentizan ==="
+
+$servicesToStop = @(
+    "Avast Antivirus",
+    "AvastWscReporter",
+    "AvastSvc",
+    "Bitdefender Update",
+    "Bitdefender Redline",
+    "ByteFenceService",
+    "CCleanerMonitor",
+    "CCleanerUpdate",
+    "WinDefend",
+    "WdNisSvc",
+    "wuauserv",   # Windows Update
+    "bits"        # Background Intelligent Transfer
+)
+
+foreach ($svc in $servicesToStop) {
+    try {
+        Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+        Set-Service -Name $svc -StartupType Disabled -ErrorAction SilentlyContinue
+    } catch {}
+}
+
+
 # ======================
 # 1. CPU
 # ======================
